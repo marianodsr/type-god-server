@@ -7,15 +7,17 @@ import (
 )
 
 type client struct {
-	conn *websocket.Conn
-	nick string
-	room *room
-	data chan []byte
+	conn     *websocket.Conn
+	nick     string
+	room     *room
+	data     chan []byte
+	progress int
 }
 
 func (c *client) readMessages() {
 	for {
-		_, msg, err := c.conn.ReadMessage()
+		msg := Message{}
+		err := c.conn.ReadJSON(msg)
 		if err != nil {
 			c.conn.Close()
 			break
@@ -25,8 +27,8 @@ func (c *client) readMessages() {
 
 }
 
-func (c *client) sendMsg(msg string) {
-	if err := c.conn.WriteMessage(1, []byte(msg)); err != nil {
+func (c *client) sendMsg(msg Message) {
+	if err := c.conn.WriteJSON(msg); err != nil {
 		fmt.Printf("unable to write message, err: %s", err.Error())
 		c.conn.Close()
 
