@@ -1,3 +1,5 @@
+# type-god-server
+
 Server for type-god.
 
 Opens a websocket connection for every client.
