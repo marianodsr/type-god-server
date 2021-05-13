@@ -24,11 +24,7 @@ func newRoom(capacity int) *room {
 		join:     make(chan *client),
 		leave:    make(chan *client),
 		capacity: capacity,
-		text: `    Lorem ipsum dolor sit amet consectetur adipisicing elit. Veniam consequatur fugit eligendi sunt voluptate vel perspiciatis beatae numquam dignissimos, commodi, cupiditate unde, repudiandae doloribus nisi minima rem placeat modi nesciunt.
-		Illo porro dignissimos cum quidem magnam ab obcaecati quibusdam debitis labore ad iusto atque, reprehenderit autem pariatur nam ipsam possimus adipisci quae sunt architecto aperiam totam unde hic. Perspiciatis, quia.
-		Laboriosam laudantium dolore iste quam adipisci molestias quae. Laborum impedit consectetur maiores velit nihil aperiam inventore fuga amet, quasi, quidem, recusandae aut saepe odit voluptas rerum? Assumenda odit ullam unde?
-		Ducimus ipsam, aspernatur eveniet eius eum cumque molestiae ab consequuntur odit temporibus cum, adipisci beatae nobis in corporis eligendi commodi aperiam et officiis est dolor, totam aliquid! Quisquam, beatae est.
-		Delectus expedita accusamus ducimus consequatur quae quibusdam cum placeat illum, id explicabo deserunt repudiandae fugit consequuntur voluptatem porro asperiores amet voluptates rem cupiditate. Ipsa, sed. Pariatur harum molestias impedit corrupti?`,
+		text:     `At that moment he had a thought that he'd never imagine he'd consider. "I could just cheat," he thought, "and that would solve the problem." He tried to move on from the thought but it was persistent. It didn't want to go away and, if he was honest with himself, he didn't want it to.`,
 	}
 	go r.run()
 	return r
@@ -46,6 +42,7 @@ func (r *room) run() {
 		case msg := <-r.forward:
 			r.broadcast(msg)
 		case client := <-r.join:
+			fmt.Printf("\n%s client s has joined the room", client.nick)
 			r.members[client] = true
 			client.room = r
 			msg := Message{
@@ -58,6 +55,10 @@ func (r *room) run() {
 			if len(r.members) == r.capacity {
 				go r.startGame()
 			}
+		case client := <-r.leave:
+			fmt.Printf("\nclient %s has left the room", client.nick)
+			delete(r.members, client)
+			client.conn.Close()
 		}
 	}
 }
