@@ -1,7 +1,11 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"log"
+	"math/rand"
+	"os"
 	"sync"
 
 	"github.com/google/uuid"
@@ -19,7 +23,24 @@ type room struct {
 	gameInProgress bool
 }
 
+type textPiece struct {
+	Paragraph string `json:"paragraph"`
+}
+
 func newRoom(capacity int) *room {
+
+	f, err := os.Open("paragraphs.json")
+	if err != nil {
+		log.Fatalln(err)
+	}
+	defer f.Close()
+	var textCollection []textPiece
+	if err := json.NewDecoder(f).Decode(&textCollection); err != nil {
+		log.Fatalln(err)
+	}
+
+	text := textCollection[rand.Intn(len(textCollection))]
+
 	r := &room{
 		id:             uuid.New().String(),
 		members:        make(map[*client]bool),
@@ -29,7 +50,7 @@ func newRoom(capacity int) *room {
 		capacity:       capacity,
 		mu:             new(sync.Mutex),
 		gameInProgress: false,
-		text:           `Una mañana, tras un sueño intranquilo, Gregorio Samsa se despertó convertido en un monstruoso insecto. Estaba echado de espaldas sobre un duro caparazón y, al alzar la cabeza, vio su vientre convexo y oscuro, surcado por curvadas callosidades, sobre el que casi no se aguantaba la colcha, que estaba a punto de escurrirse hasta el suelo. Numerosas patas, penosamente delgadas en comparación con el grosor normal de sus piernas, se agitaban sin concierto. - ¿Qué me ha ocurrido?`,
+		text:           text.Paragraph,
 	}
 	go r.run() // starts listening on room channels0
 
@@ -91,6 +112,6 @@ func (r *room) startGame() {
 	r.gameInProgress = true
 	r.mu.Unlock()
 	r.forward <- msg
-	fmt.Printf("Game started on room %s", r.id)
+	fmt.Printf("Game started on room: %s", r.id)
 
 }
