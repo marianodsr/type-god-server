@@ -7,6 +7,8 @@ const (
 	START_GAME       Event = "START_GAME"
 	NOTIFICATION     Event = "NOTIFICATION"
 	PROGRESS_ADVANCE Event = "PROGRESS_ADVANCE"
+	INITIALIZATION   Event = "INITIALIZATION"
+	VICTORY          Event = "VICTORY"
 )
 
 type Message struct {

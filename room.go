@@ -7,6 +7,7 @@ import (
 	"math/rand"
 	"os"
 	"sync"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -21,6 +22,7 @@ type room struct {
 	text           string
 	capacity       int
 	gameInProgress bool
+	createdAt      time.Time
 }
 
 type textPiece struct {
@@ -51,6 +53,7 @@ func newRoom(capacity int) *room {
 		mu:             new(sync.Mutex),
 		gameInProgress: false,
 		text:           text.Paragraph,
+		createdAt:      time.Now(),
 	}
 	go r.run() // starts listening on room channels0
 
@@ -64,6 +67,7 @@ func (r *room) broadcast(msg Message) {
 }
 
 func (r *room) run() {
+	go r.kickTimer()
 	for {
 		select {
 		case msg := <-r.forward:
@@ -91,6 +95,7 @@ func (r *room) run() {
 			r.mu.Unlock()
 			client.conn.Close()
 		}
+
 	}
 }
 
@@ -114,4 +119,24 @@ func (r *room) startGame() {
 	r.forward <- msg
 	fmt.Printf("Game started on room: %s", r.id)
 
+}
+
+func (r *room) kickTimer() {
+	called := false
+	for {
+		r.mu.Lock()
+		if r.gameInProgress {
+			r.mu.Unlock()
+			return
+		}
+		if time.Since(r.createdAt) > time.Second*15 && !r.gameInProgress && !called {
+			// not sure if for loop will initialize multiples goroutines before startGame sets gameInProgress to true
+			// so called flag just in case
+			called = true
+			go r.startGame()
+			r.mu.Unlock()
+			return
+		}
+		r.mu.Unlock()
+	}
 }

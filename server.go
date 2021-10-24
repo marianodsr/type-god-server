@@ -1,7 +1,9 @@
 package main
 
 import (
+	"math/rand"
 	"sync"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
@@ -13,6 +15,7 @@ type server struct {
 }
 
 func newServer() *server {
+	rand.Seed(time.Now().UnixNano())
 
 	return &server{
 		mu: new(sync.Mutex),
@@ -26,6 +29,12 @@ func (s *server) newClient(ws *websocket.Conn) {
 		nick:     "guest " + uuid.New().String(),
 		progress: 0,
 	}
+	c.sendMsg(Message{
+		Event: INITIALIZATION,
+		Data: map[string]interface{}{
+			"nick": c.nick,
+		},
+	})
 	s.addToRoom(c)
 	c.readMessages()
 }

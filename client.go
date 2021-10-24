@@ -29,8 +29,12 @@ func (c *client) readMessages() {
 		case PROGRESS_ADVANCE:
 			floatProgress := (float64(len(msg.Data["doneText"].(string))) / float64(len(c.room.text))) * 100
 			intProgress := math.Floor(floatProgress)
-			fmt.Println(intProgress)
-			fmt.Println(floatProgress)
+			//CHECK IF PROGRESS == 100 ( WIN )
+			if intProgress == 100 {
+				c.winGame()
+				break
+			}
+
 			msg.Data = map[string]interface{}{
 				"progress": intProgress,
 				"player":   c.nick,
@@ -47,4 +51,15 @@ func (c *client) sendMsg(msg Message) {
 		c.conn.Close()
 
 	}
+}
+
+func (c *client) winGame() {
+	msg := Message{
+		Event: VICTORY,
+		Data: map[string]interface{}{
+			"player": c.nick,
+		},
+	}
+
+	c.room.forward <- msg
 }

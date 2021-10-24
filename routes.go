@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"os"
 
 	"github.com/go-chi/chi"
 	"github.com/gorilla/websocket"
@@ -21,10 +22,11 @@ func handleRoutes() {
 	})
 	r.Get("/ws", serveWs)
 
-	http.ListenAndServe(":8080", r)
+	http.ListenAndServe(":"+os.Getenv("PORT"), r)
 }
 
 func serveWs(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("connected!")
 	upgrader.CheckOrigin = func(r *http.Request) bool { return true }
 
 	ws, err := upgrader.Upgrade(w, r, nil)
